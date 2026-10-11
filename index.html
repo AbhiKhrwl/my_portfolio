@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Aurelio Tech — AI Systems Engineer, Applied Researcher, and autonomous agent builder." />
+  <meta name="description" content="Aurelio Tech — AI Systems Engineer, Applied Researcher, and autonomous agent builder with 3D interactive portfolio." />
   <title>Aurelio Tech | AI Systems Engineer</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +12,10 @@
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
 
   <style>
     :root {
@@ -19,7 +23,6 @@
       --bg-soft: #121821;
       --bg-panel: rgba(17, 24, 39, 0.7);
       --panel: rgba(18, 24, 33, 0.85);
-      --panel-strong: rgba(15, 23, 42, 0.95);
       --text: #edf2f8;
       --text-soft: #a8b5c7;
       --muted: #7a8799;
@@ -59,6 +62,7 @@
       background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
       background-size: 42px 42px;
       mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+      z-index: 1;
     }
 
     a { text-decoration: none; color: inherit; }
@@ -199,6 +203,20 @@
       font-size: 0.74rem;
     }
 
+    #canvas-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .content-wrapper {
+      position: relative;
+      z-index: 2;
+    }
+
     .hero {
       min-height: 100vh;
       display: flex;
@@ -332,6 +350,8 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      transform-style: preserve-3d;
+      perspective: 1000px;
     }
 
     .art-panel {
@@ -342,6 +362,12 @@
       background: linear-gradient(180deg, rgba(11, 17, 26, 0.97), rgba(17, 24, 39, 0.88));
       border: 1px solid rgba(148, 163, 184, 0.16);
       box-shadow: 0 40px 90px rgba(2, 6, 23, 0.6);
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease;
+    }
+
+    .art-panel:hover {
+      transform: rotateX(5deg) rotateY(-8deg) translateZ(20px);
     }
 
     .art-panel::before {
@@ -519,10 +545,12 @@
       box-shadow: var(--shadow);
       transition: transform .25s ease, border-color .25s ease;
       overflow: hidden;
+      transform-style: preserve-3d;
+      perspective: 1000px;
     }
 
     .skill-card:hover {
-      transform: translateY(-8px);
+      transform: translateY(-8px) rotateX(8deg);
       border-color: rgba(125, 211, 252, 0.4);
     }
 
@@ -591,11 +619,14 @@
       overflow: hidden;
       transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
       box-shadow: var(--shadow);
+      transform-style: preserve-3d;
+      perspective: 1000px;
     }
 
     .project-card:hover {
-      transform: translateY(-8px);
+      transform: translateY(-8px) rotateY(-6deg);
       border-color: rgba(125, 211, 252, 0.34);
+      box-shadow: 0 40px 100px rgba(125, 211, 252, 0.15);
     }
 
     .project-visual {
@@ -904,12 +935,14 @@
     .reveal {
       opacity: 0;
       transform: translateY(22px);
-      transition: opacity .8s ease, transform .8s ease;
+      animation: revealIn 0.8s ease forwards;
     }
 
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
+    @keyframes revealIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @media (max-width: 980px) {
@@ -955,409 +988,484 @@
   </style>
 </head>
 <body>
-  <header class="header" id="header">
-    <div class="container nav-row">
-      <a href="#top" class="brand" aria-label="Aurelio Tech home">
-        <span class="brand-mark">AT</span>
-        <span>Aurelio.Tech</span>
-      </a>
+  <canvas id="canvas-bg"></canvas>
 
-      <nav class="nav" aria-label="Main navigation">
+  <div class="content-wrapper">
+    <header class="header" id="header">
+      <div class="container nav-row">
+        <a href="#top" class="brand" aria-label="Aurelio Tech home">
+          <span class="brand-mark">AT</span>
+          <span>Aurelio.Tech</span>
+        </a>
+
+        <nav class="nav" aria-label="Main navigation">
+          <a href="#about">About</a>
+          <a href="#skills">Skills</a>
+          <a href="#projects">Projects</a>
+          <a href="#experience">Experience</a>
+          <a href="#contact">Contact</a>
+        </nav>
+
+        <a href="#contact" class="nav-cta">Let's connect</a>
+        <button class="mobile-btn" id="menuBtn" aria-label="Open menu">
+          <i data-lucide="menu" width="18" height="18"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <nav>
         <a href="#about">About</a>
         <a href="#skills">Skills</a>
         <a href="#projects">Projects</a>
         <a href="#experience">Experience</a>
         <a href="#contact">Contact</a>
       </nav>
-
-      <a href="#contact" class="nav-cta">Let’s connect</a>
-      <button class="mobile-btn" id="menuBtn" aria-label="Open menu">
-        <i data-lucide="menu" width="18" height="18"></i>
-      </button>
     </div>
-  </header>
 
-  <div class="mobile-menu" id="mobileMenu">
-    <nav>
-      <a href="#about">About</a>
-      <a href="#skills">Skills</a>
-      <a href="#projects">Projects</a>
-      <a href="#experience">Experience</a>
-      <a href="#contact">Contact</a>
-    </nav>
+    <main id="top">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy reveal">
+            <div class="eyebrow">AI Systems Engineer</div>
+            <h1 class="hero-title">
+              I build <span class="gradient-text">autonomous AI</span><br />that ships.
+            </h1>
+
+            <div class="subline">Creating <span class="typed"></span></div>
+            <p class="hero-text">
+              I'm Abhishek — an AI Platform Engineer and Applied Researcher building production-grade autonomous systems, multi-agent orchestration layers, on-device LLM runtimes, and resilient AI infrastructure designed for real-world impact.
+            </p>
+
+            <div class="cta-row">
+              <a href="#projects" class="btn primary"><i data-lucide="rocket" width="16" height="16"></i> View projects</a>
+              <a href="#contact" class="btn secondary"><i data-lucide="mail" width="16" height="16"></i> Contact</a>
+            </div>
+
+            <div class="metrics">
+              <div class="metric">
+                <strong>5+</strong>
+                <span>Years</span>
+              </div>
+              <div class="metric">
+                <strong>6</strong>
+                <span>Systems</span>
+              </div>
+              <div class="metric">
+                <strong>100%</strong>
+                <span>Focus</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-art reveal">
+            <div class="floating-tag top">41 tools · 7 providers</div>
+
+            <div class="art-panel glass">
+              <div class="window-bar">
+                <span class="dot red"></span>
+                <span class="dot amber"></span>
+                <span class="dot green"></span>
+              </div>
+
+              <div class="code">
+                <div><span class="comment">// Autonomous orchestration</span></div>
+                <div><span class="key">const</span> agent = <span class="val">"Aurelio Tech"</span>;</div>
+                <div><span class="key">const</span> providers = [<span class="val">"Gemini"</span>, <span class="val">"Groq"</span>, <span class="val">"Ollama"</span>];</div>
+                <div><span class="key">const</span> retries = <span class="num">36</span>;</div>
+                <div><span class="key">const</span> tools = <span class="num">41</span>;</div>
+                <div><span class="key">const</span> uptime = <span class="val">"100%"</span>;</div>
+                <div><span class="comment">// Deploy edge + cloud + self-healing</span></div>
+              </div>
+            </div>
+
+            <div class="floating-tag bottom">Zero-cost infra</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="section">
+        <div class="container">
+          <div class="eyebrow">About</div>
+          <h2 class="headline reveal">Building AI systems for real-world velocity.</h2>
+
+          <div class="about-grid reveal">
+            <div class="panel">
+              <p>
+                I design and ship autonomous AI applications for production environments — from browser automation and agentic systems to edge inference runtimes and cloud-native orchestration layers. My work sits at the intersection of AI systems, platform engineering, and resilient design.
+              </p>
+              <p>
+                My approach is practical and architecture-first: reliable systems, observability, graceful failover, and cost-aware decisions. I care about building software that doesn't just impress in demos — it survives traffic, handles edge cases, and keeps operating under pressure.
+              </p>
+
+              <div class="chip-row">
+                <span class="chip">AI agents</span>
+                <span class="chip">LLM ops</span>
+                <span class="chip">Edge AI</span>
+                <span class="chip">Autonomous systems</span>
+                <span class="chip">Platform design</span>
+                <span class="chip">Security</span>
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-box">
+                <strong>40K+</strong>
+                <span>LOC built</span>
+              </div>
+              <div class="stat-box">
+                <strong>7+</strong>
+                <span>Providers</span>
+              </div>
+              <div class="stat-box">
+                <strong>18</strong>
+                <span>Model paths</span>
+              </div>
+              <div class="stat-box">
+                <strong>500+</strong>
+                <span>Sessions</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="skills" class="section">
+        <div class="container">
+          <div class="eyebrow">Core Capabilities</div>
+          <h2 class="headline reveal">AI systems, product engineering, and execution.</h2>
+
+          <div class="skills-grid">
+            <article class="skill-card reveal">
+              <div class="skill-icon"><i data-lucide="brain-circuit" width="24" height="24"></i></div>
+              <h3>AI & Agent Systems</h3>
+              <p>Multi-agent orchestration, toolcalling pipelines, prompt architecture, and robust fallback logic for intelligent workflows.</p>
+              <div class="tag-row">
+                <span class="tag">MCP</span>
+                <span class="tag">RAG</span>
+                <span class="tag">Swarm</span>
+              </div>
+            </article>
+
+            <article class="skill-card reveal">
+              <div class="skill-icon"><i data-lucide="server-cog" width="24" height="24"></i></div>
+              <h3>Platform Engineering</h3>
+              <p>Production-scale systems design, observability, failover loops, rate limiting, deployment pipelines, and system health.</p>
+              <div class="tag-row">
+                <span class="tag">Docker</span>
+                <span class="tag">CI/CD</span>
+                <span class="tag">Ops</span>
+              </div>
+            </article>
+
+            <article class="skill-card reveal">
+              <div class="skill-icon"><i data-lucide="cpu" width="24" height="24"></i></div>
+              <h3>Edge AI & Runtime</h3>
+              <p>On-device inference, local-first experiences, privacy-centered architecture, and performance-aware runtimes.</p>
+              <div class="tag-row">
+                <span class="tag">Gemma 4</span>
+                <span class="tag">LiteRT</span>
+                <span class="tag">Flutter</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="projects" class="section">
+        <div class="container">
+          <div class="eyebrow">Featured Work</div>
+          <h2 class="headline reveal">Flagship products built with ambition and rigor.</h2>
+
+          <div class="projects-grid">
+            <article class="project-card reveal">
+              <div class="project-visual">
+                <span class="project-badge">Open source</span>
+                <div class="project-icon"><i data-lucide="bot" width="24" height="24"></i></div>
+              </div>
+              <div class="project-body">
+                <h3>Agent-Khrwal</h3>
+                <p>Autonomous on-device AI agent platform with sandboxed tooling, multi-provider orchestration, and advanced tool execution.</p>
+                <div class="mini-row">
+                  <span class="mini-pill">40K+ LOC</span>
+                  <span class="mini-pill">41 tools</span>
+                  <span class="mini-pill">Gemma 4</span>
+                </div>
+                <div class="link-row">
+                  <a href="https://github.com/AbhiKhrwl/Agent-Khrwal/tree/feature/apex-tool-protocol" class="text-link" target="_blank" rel="noreferrer">GitHub <i data-lucide="arrow-up-right" width="14" height="14"></i></a>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-card reveal">
+              <div class="project-visual" style="background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(125,211,252,0.15), rgba(167,139,250,0.1));">
+                <span class="project-badge">Production</span>
+                <div class="project-icon"><i data-lucide="newspaper" width="24" height="24"></i></div>
+              </div>
+              <div class="project-body">
+                <h3>DailyDhandora</h3>
+                <p>Fully autonomous local news platform that scrapes, writes, composes media, and publishes without human intervention.</p>
+                <div class="mini-row">
+                  <span class="mini-pill">Zero-cost infra</span>
+                  <span class="mini-pill">AI pipeline</span>
+                  <span class="mini-pill">PWA</span>
+                </div>
+                <div class="link-row">
+                  <a href="https://dailydhandora.onrender.com/" class="text-link" target="_blank" rel="noreferrer">Live demo <i data-lucide="arrow-up-right" width="14" height="14"></i></a>
+                </div>
+              </div>
+            </article>
+
+            <article class="project-card reveal">
+              <div class="project-visual" style="background: linear-gradient(135deg, rgba(167,139,250,0.1), rgba(125,211,252,0.12), rgba(52,211,153,0.08));">
+                <span class="project-badge">Utility</span>
+                <div class="project-icon"><i data-lucide="browser" width="24" height="24"></i></div>
+              </div>
+              <div class="project-body">
+                <h3>Mitra Sharthi</h3>
+                <p>AI browser assistant for context-aware document processing, image resizing, and form-automation workflows.</p>
+                <div class="mini-row">
+                  <span class="mini-pill">Chrome extension</span>
+                  <span class="mini-pill">Manifest V3</span>
+                  <span class="mini-pill">Automation</span>
+                </div>
+                <div class="link-row">
+                  <a href="https://chromewebstore.google.com/detail/fiobjalpokhoanlgfikcpadcoeodpkaa" class="text-link" target="_blank" rel="noreferrer">Chrome store <i data-lucide="arrow-up-right" width="14" height="14"></i></a>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="experience" class="section">
+        <div class="container">
+          <div class="eyebrow">Experience</div>
+          <h2 class="headline reveal">Shipping technical work with business impact.</h2>
+
+          <div class="timeline reveal">
+            <article class="time-card">
+              <div class="time-meta">
+                <span>Aug 2023 — Present</span>
+                <span>•</span>
+                <span>Jaipur, India</span>
+              </div>
+              <h3>Applied AI Researcher & Systems Builder</h3>
+              <p>Building research-driven AI products and production systems for autonomous execution and zero-cost infrastructure.</p>
+              <ul>
+                <li>Engineered multi-provider fallback networks across Gemini, Groq, NVIDIA NIM, OpenRouter, Ollama, and local inference layers.</li>
+                <li>Developed secure autonomous execution systems using sandboxing, validation layers, and runtime safety checks.</li>
+                <li>Created novel AI evaluation frameworks focused on memory retention, strategy adaptation, and real-world decision reliability.</li>
+              </ul>
+            </article>
+
+            <article class="time-card">
+              <div class="time-meta">
+                <span>Jan 2021 — Present</span>
+                <span>•</span>
+                <span>Jaipur, India</span>
+              </div>
+              <h3>Lead AI Architect & Systems Engineer</h3>
+              <p>Designing end-to-end AI ecosystems and SaaS products with emphasis on reliability, scale, and clean systems thinking.</p>
+              <ul>
+                <li>Built DailyDhandora, an autonomous news platform with scraping, rewrite, media composition, and publishing workflows.</li>
+                <li>Engineered a multi-tenant WhatsApp AI architecture for 500+ concurrent sessions with resilient message handling and adaptive throttling.</li>
+                <li>Delivered enterprise systems with RBAC, OTP authentication, and live logistics monitoring functionality.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="eyebrow">Technology Stack</div>
+          <h2 class="headline reveal">Tools, frameworks, and infrastructure I work with.</h2>
+
+          <div class="stack-grid reveal">
+            <div class="stack-card">
+              <h4>AI & Agents</h4>
+              <ul>
+                <li>LLM Ops</li>
+                <li>Gemma 4</li>
+                <li>Gemini</li>
+                <li>Groq</li>
+                <li>MCP</li>
+                <li>Ollama</li>
+              </ul>
+            </div>
+
+            <div class="stack-card">
+              <h4>Frontend</h4>
+              <ul>
+                <li>Flutter</li>
+                <li>Dart</li>
+                <li>React</li>
+                <li>Next.js</li>
+                <li>HTML5</li>
+                <li>CSS3</li>
+              </ul>
+            </div>
+
+            <div class="stack-card">
+              <h4>Backend</h4>
+              <ul>
+                <li>Node.js</li>
+                <li>Express</li>
+                <li>Python</li>
+                <li>WebSockets</li>
+                <li>REST APIs</li>
+                <li>MongoDB</li>
+              </ul>
+            </div>
+
+            <div class="stack-card">
+              <h4>Systems</h4>
+              <ul>
+                <li>RBAC</li>
+                <li>Auth</li>
+                <li>Rate limiting</li>
+                <li>Monitoring</li>
+                <li>CI/CD</li>
+                <li>Security</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" class="section">
+        <div class="container">
+          <div class="eyebrow">Contact</div>
+          <h2 class="headline reveal">Let's build something ambitious.</h2>
+
+          <div class="contact-wrap reveal">
+            <div class="contact-card">
+              <h3>Available for AI product, platform, and automation work.</h3>
+              <p>I enjoy collaborating on agentic products, automation systems, edge AI tooling, and the architecture behind high-performance AI experiences.</p>
+
+              <div class="contact-list">
+                <a href="mailto:dev.abhishek.ai@gmail.com" class="contact-item" target="_blank" rel="noreferrer">
+                  <i data-lucide="mail" width="18" height="18"></i>
+                  dev.abhishek.ai@gmail.com
+                </a>
+                <a href="https://www.linkedin.com/in/abhikhrwl/" class="contact-item" target="_blank" rel="noreferrer">
+                  <i data-lucide="linkedin" width="18" height="18"></i>
+                  linkedin.com/in/abhikhrwl
+                </a>
+                <a href="https://github.com/AbhiKhrwl" class="contact-item" target="_blank" rel="noreferrer">
+                  <i data-lucide="github" width="18" height="18"></i>
+                  github.com/AbhiKhrwl
+                </a>
+              </div>
+            </div>
+
+            <div class="contact-card">
+              <h3>Quick profile</h3>
+              <p>AI Platform Engineer & Applied Researcher working at the frontier of autonomous systems, on-device AI, and zero-cost infrastructure design.</p>
+              <div class="chip-row">
+                <span class="chip">Autonomous AI</span>
+                <span class="chip">Zero-cost infra</span>
+                <span class="chip">Research-driven</span>
+                <span class="chip">Production systems</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container footer-inner">
+        <div>© 2026 Aurelio Tech. Built with curiosity, speed, and system thinking.</div>
+        <div class="socials">
+          <a class="social" href="https://github.com/AbhiKhrwl" target="_blank" rel="noreferrer" aria-label="GitHub"><i data-lucide="github" width="18" height="18"></i></a>
+          <a class="social" href="https://www.linkedin.com/in/abhikhrwl/" target="_blank" rel="noreferrer" aria-label="LinkedIn"><i data-lucide="linkedin" width="18" height="18"></i></a>
+          <a class="social" href="mailto:dev.abhishek.ai@gmail.com" aria-label="Email"><i data-lucide="mail" width="18" height="18"></i></a>
+        </div>
+      </div>
+    </footer>
   </div>
 
-  <main id="top">
-    <section class="hero">
-      <div class="container hero-grid">
-        <div class="hero-copy reveal">
-          <div class="eyebrow">AI Systems Engineer</div>
-          <h1 class="hero-title">
-            I build <span class="gradient-text">autonomous AI</span><br />that ships.
-          </h1>
-
-          <div class="subline">Creating <span class="typed"></span></div>
-          <p class="hero-text">
-            I’m Abhishek — an AI Platform Engineer and Applied Researcher building production-grade autonomous systems, multi-agent orchestration layers, on-device LLM runtimes, and resilient AI infrastructure designed for real-world impact.
-          </p>
-
-          <div class="cta-row">
-            <a href="#projects" class="btn primary"><i data-lucide="rocket" width="16" height="16"></i> View projects</a>
-            <a href="#contact" class="btn secondary"><i data-lucide="mail" width="16" height="16"></i> Contact</a>
-          </div>
-
-          <div class="metrics">
-            <div class="metric">
-              <strong>5+</strong>
-              <span>Years</span>
-            </div>
-            <div class="metric">
-              <strong>6</strong>
-              <span>Systems</span>
-            </div>
-            <div class="metric">
-              <strong>100%</strong>
-              <span>Focus</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="hero-art reveal">
-          <div class="floating-tag top">41 tools · 7 providers</div>
-
-          <div class="art-panel glass">
-            <div class="window-bar">
-              <span class="dot red"></span>
-              <span class="dot amber"></span>
-              <span class="dot green"></span>
-            </div>
-
-            <div class="code">
-              <div><span class="comment">// Autonomous orchestration</span></div>
-              <div><span class="key">const</span> agent = <span class="val">"Aurelio Tech"</span>;</div>
-              <div><span class="key">const</span> providers = [<span class="val">"Gemini"</span>, <span class="val">"Groq"</span>, <span class="val">"Ollama"</span>];</div>
-              <div><span class="key">const</span> retries = <span class="num">36</span>;</div>
-              <div><span class="key">const</span> tools = <span class="num">41</span>;</div>
-              <div><span class="key">const</span> uptime = <span class="val">"100%"</span>;</div>
-              <div><span class="comment">// Deploy edge + cloud + self-healing loops</span></div>
-            </div>
-          </div>
-
-          <div class="floating-tag bottom">Zero-cost infra</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="about" class="section">
-      <div class="container">
-        <div class="eyebrow">About</div>
-        <h2 class="headline reveal">Building AI systems for real-world velocity.</h2>
-
-        <div class="about-grid reveal">
-          <div class="panel">
-            <p>
-              I design and ship autonomous AI applications for production environments — from browser automation and agentic systems to edge inference runtimes and cloud-native orchestration layers. My work sits at the intersection of AI systems, platform engineering, and resilient design.
-            </p>
-            <p>
-              My approach is practical and architecture-first: reliable systems, observability, graceful failover, and cost-aware decisions. I care about building software that doesn’t just impress in demos — it survives traffic, handles edge cases, and keeps operating under pressure.
-            </p>
-
-            <div class="chip-row">
-              <span class="chip">AI agents</span>
-              <span class="chip">LLM ops</span>
-              <span class="chip">Edge AI</span>
-              <span class="chip">Autonomous systems</span>
-              <span class="chip">Platform design</span>
-              <span class="chip">Security</span>
-            </div>
-          </div>
-
-          <div class="stats-grid">
-            <div class="stat-box">
-              <strong>40K+</strong>
-              <span>LOC built</span>
-            </div>
-            <div class="stat-box">
-              <strong>7+</strong>
-              <span>Providers</span>
-            </div>
-            <div class="stat-box">
-              <strong>18</strong>
-              <span>Model paths</span>
-            </div>
-            <div class="stat-box">
-              <strong>500+</strong>
-              <span>Sessions</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="skills" class="section">
-      <div class="container">
-        <div class="eyebrow">Core Capabilities</div>
-        <h2 class="headline reveal">AI systems, product engineering, and execution.</h2>
-
-        <div class="skills-grid">
-          <article class="skill-card reveal">
-            <div class="skill-icon"><i data-lucide="brain-circuit" width="24" height="24"></i></div>
-            <h3>AI & Agent Systems</h3>
-            <p>Multi-agent orchestration, toolcalling pipelines, prompt architecture, and robust fallback logic for intelligent workflows.</p>
-            <div class="tag-row">
-              <span class="tag">MCP</span>
-              <span class="tag">RAG</span>
-              <span class="tag">Swarm</span>
-            </div>
-          </article>
-
-          <article class="skill-card reveal">
-            <div class="skill-icon"><i data-lucide="server-cog" width="24" height="24"></i></div>
-            <h3>Platform Engineering</h3>
-            <p>Production-scale systems design, observability, failover loops, rate limiting, deployment pipelines, and system health.</p>
-            <div class="tag-row">
-              <span class="tag">Docker</span>
-              <span class="tag">CI/CD</span>
-              <span class="tag">Ops</span>
-            </div>
-          </article>
-
-          <article class="skill-card reveal">
-            <div class="skill-icon"><i data-lucide="cpu" width="24" height="24"></i></div>
-            <h3>Edge AI & Runtime</h3>
-            <p>On-device inference, local-first experiences, privacy-centered architecture, and performance-aware runtimes.</p>
-            <div class="tag-row">
-              <span class="tag">Gemma 4</span>
-              <span class="tag">LiteRT</span>
-              <span class="tag">Flutter</span>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="projects" class="section">
-      <div class="container">
-        <div class="eyebrow">Featured Work</div>
-        <h2 class="headline reveal">Flagship products built with ambition and rigor.</h2>
-
-        <div class="projects-grid">
-          <article class="project-card reveal">
-            <div class="project-visual">
-              <span class="project-badge">Open source</span>
-              <div class="project-icon"><i data-lucide="bot" width="24" height="24"></i></div>
-            </div>
-            <div class="project-body">
-              <h3>Agent-Khrwal</h3>
-              <p>Autonomous on-device AI agent platform with sandboxed tooling, multi-provider orchestration, and advanced tool execution.</p>
-              <div class="mini-row">
-                <span class="mini-pill">40K+ LOC</span>
-                <span class="mini-pill">41 tools</span>
-                <span class="mini-pill">Gemma 4</span>
-              </div>
-              <div class="link-row">
-                <a href="https://github.com/AbhiKhrwl/Agent-Khrwal/tree/feature/apex-tool-protocol" class="text-link" target="_blank" rel="noreferrer">GitHub <i data-lucide="arrow-up-right" width="14" height="14"></i></a>
-              </div>
-            </div>
-          </article>
-
-          <article class="project-card reveal">
-            <div class="project-visual" style="background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(125,211,252,0.15), rgba(167,139,250,0.1));">
-              <span class="project-badge">Production</span>
-              <div class="project-icon"><i data-lucide="newspaper" width="24" height="24"></i></div>
-            </div>
-            <div class="project-body">
-              <h3>DailyDhandora</h3>
-              <p>Fully autonomous local news platform that scrapes, writes, composes media, and publishes without human intervention.</p>
-              <div class="mini-row">
-                <span class="mini-pill">Zero-cost infra</span>
-                <span class="mini-pill">AI pipeline</span>
-                <span class="mini-pill">PWA</span>
-              </div>
-              <div class="link-row">
-                <a href="https://dailydhandora.onrender.com/" class="text-link" target="_blank" rel="noreferrer">Live demo <i data-lucide="arrow-up-right" width="14" height="14"></i></a>
-              </div>
-            </div>
-          </article>
-
-          <article class="project-card reveal">
-            <div class="project-visual" style="background: linear-gradient(135deg, rgba(167,139,250,0.1), rgba(125,211,252,0.12), rgba(52,211,153,0.08));">
-              <span class="project-badge">Utility</span>
-              <div class="project-icon"><i data-lucide="browser" width="24" height="24"></i></div>
-            </div>
-            <div class="project-body">
-              <h3>Mitra Sharthi</h3>
-              <p>AI browser assistant for context-aware document processing, image resizing, and form-automation workflows.</p>
-              <div class="mini-row">
-                <span class="mini-pill">Chrome extension</span>
-                <span class="mini-pill">Manifest V3</span>
-                <span class="mini-pill">Automation</span>
-              </div>
-              <div class="link-row">
-                <a href="https://chromewebstore.google.com/detail/fiobjalpokhoanlgfikcpadcoeodpkaa" class="text-link" target="_blank" rel="noreferrer">Chrome store <i data-lucide="arrow-up-right" width="14" height="14"></i></a>
-              </div>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="experience" class="section">
-      <div class="container">
-        <div class="eyebrow">Experience</div>
-        <h2 class="headline reveal">Shipping technical work with business impact.</h2>
-
-        <div class="timeline reveal">
-          <article class="time-card">
-            <div class="time-meta">
-              <span>Aug 2023 — Present</span>
-              <span>•</span>
-              <span>Jaipur, India</span>
-            </div>
-            <h3>Applied AI Researcher & Systems Builder</h3>
-            <p>Building research-driven AI products and production systems for autonomous execution and zero-cost infrastructure.</p>
-            <ul>
-              <li>Engineered multi-provider fallback networks across Gemini, Groq, NVIDIA NIM, OpenRouter, Ollama, and local inference layers.</li>
-              <li>Developed secure autonomous execution systems using sandboxing, validation layers, and runtime safety checks.</li>
-              <li>Created novel AI evaluation frameworks focused on memory retention, strategy adaptation, and real-world decision reliability.</li>
-            </ul>
-          </article>
-
-          <article class="time-card">
-            <div class="time-meta">
-              <span>Jan 2021 — Present</span>
-              <span>•</span>
-              <span>Jaipur, India</span>
-            </div>
-            <h3>Lead AI Architect & Systems Engineer</h3>
-            <p>Designing end-to-end AI ecosystems and SaaS products with emphasis on reliability, scale, and clean systems thinking.</p>
-            <ul>
-              <li>Built DailyDhandora, an autonomous news platform with scraping, rewrite, media composition, and publishing workflows.</li>
-              <li>Engineered a multi-tenant WhatsApp AI architecture for 500+ concurrent sessions with resilient message handling and adaptive throttling.</li>
-              <li>Delivered enterprise systems with RBAC, OTP authentication, and live logistics monitoring functionality.</li>
-            </ul>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <div class="eyebrow">Technology Stack</div>
-        <h2 class="headline reveal">Tools, frameworks, and infrastructure I work with.</h2>
-
-        <div class="stack-grid reveal">
-          <div class="stack-card">
-            <h4>AI & Agents</h4>
-            <ul>
-              <li>LLM Ops</li>
-              <li>Gemma 4</li>
-              <li>Gemini</li>
-              <li>Groq</li>
-              <li>MCP</li>
-              <li>Ollama</li>
-            </ul>
-          </div>
-
-          <div class="stack-card">
-            <h4>Frontend</h4>
-            <ul>
-              <li>Flutter</li>
-              <li>Dart</li>
-              <li>React</li>
-              <li>Next.js</li>
-              <li>HTML5</li>
-              <li>CSS3</li>
-            </ul>
-          </div>
-
-          <div class="stack-card">
-            <h4>Backend</h4>
-            <ul>
-              <li>Node.js</li>
-              <li>Express</li>
-              <li>Python</li>
-              <li>WebSockets</li>
-              <li>REST APIs</li>
-              <li>MongoDB</li>
-            </ul>
-          </div>
-
-          <div class="stack-card">
-            <h4>Systems</h4>
-            <ul>
-              <li>RBAC</li>
-              <li>Auth</li>
-              <li>Rate limiting</li>
-              <li>Monitoring</li>
-              <li>CI/CD</li>
-              <li>Security</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="contact" class="section">
-      <div class="container">
-        <div class="eyebrow">Contact</div>
-        <h2 class="headline reveal">Let’s build something ambitious.</h2>
-
-        <div class="contact-wrap reveal">
-          <div class="contact-card">
-            <h3>Available for AI product, platform, and automation work.</h3>
-            <p>I enjoy collaborating on agentic products, automation systems, edge AI tooling, and the architecture behind high-performance AI experiences.</p>
-
-            <div class="contact-list">
-              <a href="mailto:dev.abhishek.ai@gmail.com" class="contact-item" target="_blank" rel="noreferrer">
-                <i data-lucide="mail" width="18" height="18"></i>
-                dev.abhishek.ai@gmail.com
-              </a>
-              <a href="https://www.linkedin.com/in/abhikhrwl/" class="contact-item" target="_blank" rel="noreferrer">
-                <i data-lucide="linkedin" width="18" height="18"></i>
-                linkedin.com/in/abhikhrwl
-              </a>
-              <a href="https://github.com/AbhiKhrwl" class="contact-item" target="_blank" rel="noreferrer">
-                <i data-lucide="github" width="18" height="18"></i>
-                github.com/AbhiKhrwl
-              </a>
-            </div>
-          </div>
-
-          <div class="contact-card">
-            <h3>Quick profile</h3>
-            <p>AI Platform Engineer & Applied Researcher working at the frontier of autonomous systems, on-device AI, and zero-cost infrastructure design.</p>
-            <div class="chip-row">
-              <span class="chip">Autonomous AI</span>
-              <span class="chip">Zero-cost infra</span>
-              <span class="chip">Research-driven</span>
-              <span class="chip">Production systems</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <div class="container footer-inner">
-      <div>© 2026 Aurelio Tech. Built with curiosity, speed, and system thinking.</div>
-      <div class="socials">
-        <a class="social" href="https://github.com/AbhiKhrwl" target="_blank" rel="noreferrer" aria-label="GitHub"><i data-lucide="github" width="18" height="18"></i></a>
-        <a class="social" href="https://www.linkedin.com/in/abhikhrwl/" target="_blank" rel="noreferrer" aria-label="LinkedIn"><i data-lucide="linkedin" width="18" height="18"></i></a>
-        <a class="social" href="mailto:dev.abhishek.ai@gmail.com" aria-label="Email"><i data-lucide="mail" width="18" height="18"></i></a>
-      </div>
-    </div>
-  </footer>
-
   <script>
-    const header = document.getElementById('header');
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
+    // Three.js Background Animation
+    const canvas = document.getElementById('canvas-bg');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0);
+    camera.position.z = 5;
 
+    const particles = [];
+
+    // Create floating particles
+    for (let i = 0; i < 50; i++) {
+      const geometry = new THREE.SphereGeometry(Math.random() * 0.1, 8, 8);
+      const material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setHSL(Math.random() * 0.3 + 0.5, 0.5, 0.5),
+        wireframe: true,
+        transparent: true,
+        opacity: Math.random() * 0.5 + 0.2
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(
+        (Math.random() - 0.5) * 12,
+        (Math.random() - 0.5) * 12,
+        (Math.random() - 0.5) * 10
+      );
+      mesh.velocity = {
+        x: (Math.random() - 0.5) * 0.02,
+        y: (Math.random() - 0.5) * 0.02,
+        z: (Math.random() - 0.5) * 0.02
+      };
+      mesh.rotation.x = Math.random() * Math.PI;
+      mesh.rotation.y = Math.random() * Math.PI;
+      scene.add(mesh);
+      particles.push(mesh);
+    }
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+
+      particles.forEach(particle => {
+        particle.position.x += particle.velocity.x;
+        particle.position.y += particle.velocity.y;
+        particle.position.z += particle.velocity.z;
+
+        particle.rotation.x += 0.001;
+        particle.rotation.y += 0.001;
+
+        // Wrap around
+        if (particle.position.x > 6) particle.position.x = -6;
+        if (particle.position.x < -6) particle.position.x = 6;
+        if (particle.position.y > 6) particle.position.y = -6;
+        if (particle.position.y < -6) particle.position.y = 6;
+      });
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Header scroll effect
+    const header = document.getElementById('header');
     window.addEventListener('scroll', () => {
       header.classList.toggle('scrolled', window.scrollY > 24);
     });
+
+    // Mobile menu
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
 
     menuBtn.addEventListener('click', () => {
       mobileMenu.classList.toggle('active');
@@ -1367,18 +1475,7 @@
       link.addEventListener('click', () => mobileMenu.classList.remove('active'));
     });
 
-    const revealEls = document.querySelectorAll('.reveal');
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-
-    revealEls.forEach((el) => revealObserver.observe(el));
-
+    // Typed.js for hero subtitle
     new Typed('.typed', {
       strings: ['AI agents', 'agentic workflows', 'zero-cost infrastructure', 'on-device intelligence', 'full-stack AI systems'],
       typeSpeed: 70,
@@ -1389,8 +1486,8 @@
       cursorChar: '|'
     });
 
+    // Lucide icons
     lucide.createIcons();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
 </body>
 </html>
